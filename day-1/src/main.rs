@@ -12,7 +12,9 @@ fn main() -> Result<(), std::io::Error> {
         .collect();
 
     elves.sort();
-    println!("The elf with the most calories is carrying {} calories.", elves.last().unwrap());
+    elves.reverse();
+    let calories: u32 = elves.iter().take(3).sum();
+    println!("The three elves carying the most calories are carrying a total of {} calories.", calories);
 
     Ok(())
 }
