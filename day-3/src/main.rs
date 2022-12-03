@@ -1,3 +1,5 @@
+use itertools::Itertools;
+
 type HashSet<T> = std::collections::HashSet<T>;
 
 fn main() -> Result<(), std::io::Error> {
@@ -5,11 +7,18 @@ fn main() -> Result<(), std::io::Error> {
 
     let result: u32 = input
         .split_ascii_whitespace()
-        .map(|items| items.split_at(items.len() / 2))
-        .map(|(first, second)| {
+        .tuples()
+        .map(|(first, second, third)| {
             (
                 HashSet::from_iter(first.chars()),
                 HashSet::from_iter(second.chars()),
+                HashSet::from_iter(third.chars()),
+            )
+        })
+        .map(|(first, second, third)| {
+            (
+                first.intersection(&second).cloned().collect::<HashSet<_>>(),
+                third,
             )
         })
         .map(|(first, second)| first.intersection(&second).next().unwrap().clone())
@@ -20,6 +29,6 @@ fn main() -> Result<(), std::io::Error> {
         })
         .sum();
 
-    println!("Sum of priorities of duplicate items is {result}");
+    println!("Sum of priorities of badge types is {result}");
     Ok(())
 }
