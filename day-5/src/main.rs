@@ -15,7 +15,7 @@ impl State {
 
     fn apply_move(&mut self, m: &Move) {
         let range = (self.0[m.source].len() - m.number)..;
-        let mut moving: Vec<_> = self.0[m.source].drain(range).rev().collect();
+        let mut moving: Vec<_> = self.0[m.source].drain(range).collect();
         self.0[m.dest].append(&mut moving);
     }
 
