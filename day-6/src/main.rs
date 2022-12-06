@@ -1,6 +1,6 @@
 use itertools::Itertools;
 
- const LENGTH: usize = 4;
+ const LENGTH: usize = 14;
 
 fn main() -> Result<(), std::io::Error> {
     let input = std::fs::read_to_string("input")?;
@@ -12,7 +12,7 @@ fn main() -> Result<(), std::io::Error> {
         .next()
         .expect("Failed to find marker");
     println!(
-        "First start-of-packet marker appears {} characters into stream.",
+        "First start-of-message marker appears {} characters into stream.",
         first.0 + first.1.len()
     );
     Ok(())
