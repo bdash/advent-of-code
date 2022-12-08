@@ -1,3 +1,5 @@
+use itertools::iproduct;
+
 fn update_visible_trees_in_sequence<'a>(
     trees: impl Iterator<Item = &'a u8>,
     visible: impl Iterator<Item = &'a mut bool>,
@@ -80,21 +82,77 @@ fn count_trees_visible_from_perimeter(grid: &Grid) -> usize {
     visible_trees.iter().filter(|visible| **visible).count()
 }
 
+fn score_view<'a>(current: u8, trees: impl Iterator<Item = &'a u8> + Clone) -> usize {
+    trees
+        .clone()
+        .enumerate()
+        .find(|(_, height)| **height >= current)
+        .map_or_else(
+            || {
+                // We did not find a tree of height `current` or taller. We can see all of the trees.
+                trees.count()
+            },
+            |(idx, _)| {
+                // Convert 0-based index into a 1-based count.
+                idx + 1
+            },
+        )
+}
+
+fn optimal_viewing_score_for_grid(grid: &Grid) -> usize {
+    let mut best_score = 0;
+    for (column, row) in iproduct!(0..grid.width, 0..grid.height) {
+        let start_of_row = row * grid.width;
+        let position = start_of_row + column;
+        let left = grid.tree_heights[start_of_row..position]
+            .iter()
+            .rev();
+        let right = grid.tree_heights[position..(start_of_row + grid.width)]
+            .iter()
+            .skip(1);
+        let up = grid.tree_heights[column..position]
+            .iter()
+            .step_by(grid.width)
+            .rev();
+        let down = grid.tree_heights[position..]
+            .iter()
+            .step_by(grid.width)
+            .skip(1);
+
+        let current = grid.tree_heights[position];
+        let score = score_view(current, left)
+            * score_view(current, right)
+            * score_view(current, up)
+            * score_view(current, down);
+        if score > best_score {
+            best_score = score;
+        }
+    }
+    best_score
+}
+
 fn part_1(input: &str) {
     let grid = parse(&input);
     let result = count_trees_visible_from_perimeter(&grid);
     println!("There are {} trees visible from the perimeter.", result);
 }
 
+fn part_2(input: &str) {
+    let grid = parse(&input);
+    let result = optimal_viewing_score_for_grid(&grid);
+    println!("The optimal viewing score found was {}.", result);
+}
+
 fn main() -> Result<(), std::io::Error> {
     let input = std::fs::read_to_string("input")?;
     part_1(&input);
+    part_2(&input);
     Ok(())
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::visible_trees_in_sequence;
+    use crate::{score_view, visible_trees_in_sequence};
 
     #[test]
     fn test_number_of_visible_trees() {
@@ -118,5 +176,13 @@ mod tests {
             visible_trees_in_sequence(&[3 as u8, 5, 3, 9, 0]),
             [true, true, false, true, false]
         );
+    }
+
+    #[test]
+    fn test_score_view() {
+        assert_eq!(score_view(5, [3].iter()), 1);
+        assert_eq!(score_view(5, [5, 2].iter()), 1);
+        assert_eq!(score_view(5, [1, 2].iter()), 2);
+        assert_eq!(score_view(5, [3, 5, 3].iter()), 2);
     }
 }
